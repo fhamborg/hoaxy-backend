@@ -35,6 +35,8 @@ import functools
 import logging
 import lucene
 import sqlalchemy
+from pymongo import MongoClient
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +54,11 @@ TO_JSON_KWARGS = CONF['api']['dataframe_to_json_kwargs']
 N1 = CONF['api']['n_query_api_returned']
 N2 = CONF['api']['n_query_of_recent_sorting']
 MIN_SCORE = CONF['api']['min_score_of_recent_sorting']
+
+# Mongo DB
+mongo_client = MongoClient()
+mongo_db = mongo_client.primer
+mongo_collection_events = mongo_db.request_events
 
 
 def streaming_start_at(engine):
@@ -139,6 +146,26 @@ def before_request():
             value=now_str,
             value_type='datetime',
             description="in api, recent refresh datetime of searcher"))
+
+
+@app.after_request
+def after_request(response):
+    # the request is available as 'request'
+    # request parameters
+    request_query_parameters = copy_req_args(request.args)
+    # response data
+    response_data = response.get_data()
+    # date
+    request_datetime = datetime.datetime.now()
+    # request IP
+    request_client_ip = request.remote_addr
+
+    result = mongo_collection_events.insert_one({
+        'request_ip': request_client_ip,
+        'request_date': request_datetime,
+        'request_parameters': request_query_parameters,
+        'response_data': response_data
+    })
 
 
 @app.route('/')
