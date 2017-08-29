@@ -37,7 +37,6 @@ import logging
 import lucene
 import sqlalchemy
 from pymongo import MongoClient
-import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +156,7 @@ def after_request(response):
     # response data
     response_data = response.get_data()
     # date
-    request_datetime = datetime.datetime.now()
+    request_datetime = datetime.utcnow()
     # request IP
     request_client_ip = request.remote_addr
 
