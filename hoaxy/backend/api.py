@@ -166,6 +166,7 @@ def after_request(response):
         'request_parameters': request_query_parameters,
         'response_data': response_data
     })
+    return response
 
 
 @app.route('/')
